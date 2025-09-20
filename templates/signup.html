@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - Arogya AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.6s ease-in-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
+    .loading::after {
+      content: "";
+      border: 2px solid white;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      width: 16px; height: 16px;
+      display: inline-block;
+      margin-left: 8px;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-200 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <header class="absolute top-0 left-0 w-full py-6 px-8 flex justify-between items-center">
+    <a href="/" class="flex items-center gap-3 z-10">
+      <div class="p-2 bg-teal-500 rounded-full"><i class="ph-activity text-white text-2xl"></i></div>
+      <h1 class="text-xl font-bold text-white">Arogya AI</h1>
+    </a>
+    <div class="z-10">
+      <span class="text-slate-400">Already have an account?</span>
+      <a href="/login" class="font-semibold text-teal-400 hover:text-teal-300 ml-2 transition-colors">Sign In</a>
+    </div>
+  </header>
+
+  <!-- Signup Form -->
+  <main class="flex items-center justify-center flex-grow py-24">
+    <div class="w-full max-w-md bg-slate-800/60 rounded-2xl shadow-lg p-8 fade-in">
+      <h2 class="text-2xl font-bold text-white mb-2">Create an Account</h2>
+      <p class="text-slate-400 mb-6">Start your personalized fitness journey today.</p>
+      
+      <form id="signup-form" class="space-y-4 text-left">
+        <input id="name" type="text" required placeholder="Full Name"
+          class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"/>
+        <input id="email" type="email" required placeholder="Email address"
+          class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"/>
+        <input id="password" type="password" required placeholder="Password"
+          class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"/>
+        <input id="confirm-password" type="password" required placeholder="Confirm Password"
+          class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"/>
+        
+        <button id="signup-btn" type="submit"
+          class="w-full py-3 rounded-lg text-white font-semibold bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-teal-500 transition">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+        <div class="relative flex justify-center text-sm"><span class="px-2 bg-slate-900 text-slate-500">Or continue with</span></div>
+      </div>
+      
+      <!-- Google Sign-in -->
+      <button id="google-signin-btn" class="w-full flex items-center justify-center py-3 bg-white rounded-lg shadow hover:bg-slate-100 transition text-slate-700 font-medium">
+        <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v8.51h13.07c-.6 5.42-4.15 9.25-9.65 9.25-5.82 0-10.56-4.74-10.56-10.56s4.74-10.56 10.56-10.56c3.34 0 6.01 1.42 7.44 2.78l6.45-6.45C37.67 6.12 31.45 3 24 3 11.42 3 1.07 10.42 1.07 21s10.35 18 22.93 18c7.34 0 12.3-3.1 16.21-7.19 4.02-4.2 3.82-10.88 3.82-12.26z"/></svg>
+        Sign up with Google
+      </button>
+      
+      <p id="error-message" class="text-red-400 text-sm mt-4 text-center"></p>
+    </div>
+  </main>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+
+  <!-- Auth Logic -->
+ <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcnPc0BZ_LhsJA9pTtOddkCCTh8efl3Gc",
+      authDomain: "arogya-ai-7315f.firebaseapp.com",
+      projectId: "arogya-ai-7315f",
+      storageBucket: "arogya-ai-7315f.firebasestorage.app",
+      messagingSenderId: "193957808869",
+      appId: "1:193957808869:web:7aa1f0b2a901bc8d85a20c",
+      measurementId: "G-099T2FMKT9"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const form = document.getElementById('signup-form');
+    const errorMsg = document.getElementById('error-message');
+    const signupBtn = document.getElementById('signup-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = "";
+      signupBtn.textContent = "Creating Account...";
+      signupBtn.disabled = true;
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        errorMsg.textContent = "Passwords do not match!";
+        signupBtn.textContent = "Sign Up";
+        signupBtn.disabled = false;
+        return;
+      }
+
+      try {
+        // 1️⃣ Create Firebase user
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: name });
+
+        // 2️⃣ Get Firebase ID token
+        const idToken = await userCredential.user.getIdToken();
+
+        // 3️⃣ Send token to Flask to start session
+        const res = await fetch('/session_login', {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+          window.location.href = "/login";
+        } else {
+          errorMsg.textContent = data.message;
+        }
+      } catch (err) {
+        errorMsg.textContent = err.message;
+      } finally {
+        signupBtn.textContent = "Sign Up";
+        signupBtn.disabled = false;
+      }
+    });
+
+    // Google Signup
+    document.getElementById('google-signup-btn').addEventListener('click', async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const idToken = await result.user.getIdToken();
+
+        const res = await fetch('/session_login', {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+          window.location.href = "/dashboard";
+        } else {
+          errorMsg.textContent = data.message;
+        }
+      } catch (err) {
+        errorMsg.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
+

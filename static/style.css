@@ -1,0 +1,82 @@
+/* Custom Styles for Arogya AI */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar for a better look */
+#chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+#chat-box::-webkit-scrollbar-thumb {
+    background-color: #4B5563; /* gray-600 */
+    border-radius: 3px;
+}
+#chat-box::-webkit-scrollbar-track {
+    background-color: #1F2937; /* gray-800 */
+}
+
+/* Base styles for chat messages */
+.message-container {
+    display: flex;
+    gap: 0.75rem; /* 12px */
+    max-width: 80%;
+    margin-bottom: 1rem; /* 16px */
+}
+
+/* User Message Styles */
+.user-message-container {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+.user-message-bubble {
+    background-color: #3B82F6; /* blue-500 */
+    color: white;
+    padding: 1rem; /* 16px */
+    border-radius: 1.5rem; /* 24px */
+    border-bottom-right-radius: 0.25rem; /* 4px */
+}
+
+/* AI Message Styles */
+.ai-message-container {
+    justify-content: flex-start;
+}
+.ai-message-bubble {
+    background-color: #374151; /* gray-700 */
+    color: #F3F4F6; /* gray-100 */
+    padding: 1rem; /* 16px */
+    border-radius: 1.5rem; /* 24px */
+    border-top-left-radius: 0.25rem; /* 4px */
+}
+
+.ai-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem; /* 40px */
+    width: 2.5rem; /* 40px */
+    background-color: #4B5563; /* gray-600 */
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Suggestion Chip Styling */
+.suggestion-chip {
+    background-color: #4B5563; /* gray-600 */
+    color: #D1D5DB; /* gray-300 */
+    font-size: 0.875rem; /* 14px */
+    padding: 0.5rem 1rem; /* 8px 16px */
+    border-radius: 9999px; /* full */
+    transition: all 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+.suggestion-chip:hover {
+    transform: translateY(-2px);
+    background-color: #6B7280; /* gray-500 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Helper class for hidden views */
+.hidden {
+    display: none;
+}
