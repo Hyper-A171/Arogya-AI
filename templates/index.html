@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arogya AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css">
+</head>
+<body class="bg-gray-900 h-screen flex antialiased text-gray-200">
+
+{% if current_user.is_authenticated %}
+  <!-- ✅ Sidebar only for logged-in users -->
+  <div class="w-full h-full lg:max-w-6xl lg:mx-auto lg:my-8 lg:rounded-2xl shadow-2xl flex overflow-hidden bg-gray-800">
+    <a href="{{ url_for('logout') }}" class="text-teal-400 hover:text-teal-500 font-semibold">Logout</a>
+
+    <!-- Sidebar -->
+    <aside class="hidden md:flex w-1/3 lg:w-1/4 h-full bg-gray-800 border-r border-gray-700 flex-col p-6">
+      <div class="flex items-center gap-3 mb-8">
+        <div class="p-2 bg-blue-500 rounded-full">
+          <i class="ph-activity text-white text-2xl"></i>
+        </div>
+        <h1 class="text-xl font-bold text-white">Arogya AI</h1>
+      </div>
+
+      <nav id="sidebar-nav" class="flex flex-col gap-4 text-gray-400">
+        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg bg-gray-700 text-white font-semibold" onclick="showView('chat-view', this)">
+          <i class="ph-chats-fill text-lg"></i><span>AI Chat</span>
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('dashboard-view', this)">
+          <i class="ph-chart-bar-fill text-lg"></i><span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('workouts-view', this)">
+          <i class="ph-sneaker-move-fill text-lg"></i><span>Workouts</span>
+        </a>
+        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('schedule-view', this)">
+          <i class="ph-calendar-fill text-lg"></i><span>Schedule</span>
+        </a>
+      </nav>
+
+      <!-- User profile -->
+      <div class="mt-auto p-4 bg-gray-900/50 rounded-lg">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white">
+            {{ user.name[0] if user.name else 'A' }}
+          </div>
+          <div>
+            <h4 class="font-semibold text-white truncate">{{ user.name }}</h4>
+            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+          </div>
+          <a href="/logout" title="Logout" class="ml-auto p-2 rounded-full hover:bg-gray-700 transition-colors">
+            <i class="ph-sign-out-bold text-red-500 text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="w-full md:w-2/3 lg:w-3/4 h-full flex flex-col bg-gray-850">
+      <div id="chat-view" class="view h-full flex flex-col">
+        <header class="p-4 border-b border-gray-700">
+          <h2 class="text-lg font-semibold">AI Fitness Coach</h2>
+        </header>
+        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
+        <div class="p-6 border-t border-gray-700 flex items-center bg-gray-850">
+          <input type="text" id="user-input" placeholder="Type your message..." class="flex-1 bg-gray-700 rounded-xl px-3 py-2 text-white">
+          <button id="send-btn" class="ml-2 p-3 bg-blue-500 rounded-xl hover:bg-blue-600">
+            <i class="ph-paper-plane-tilt-fill text-white text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+{% else %}
+  <!-- ✅ Topbar for logged-out users -->
+  <div class="w-full h-screen flex items-center justify-center flex-col">
+    <h1 class="text-3xl font-bold text-white mb-4">Welcome to Arogya AI</h1>
+    <a href="{{ url_for('login') }}" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl text-white font-semibold">Login to Continue</a>
+  </div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,84 +1,1118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arogya AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arogya AI - Your Personal Health Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chat-bubble-user {
+            background-color: #3B82F6; /* blue-500 */
+            color: white;
+        }
+        #chat-container::-webkit-scrollbar,
+        .view::-webkit-scrollbar,
+        .modal-body-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-container::-webkit-scrollbar-thumb,
+        .view::-webkit-scrollbar-thumb,
+        .modal-body-scroll::-webkit-scrollbar-thumb {
+            background-color: #4B5563; /* gray-600 */
+            border-radius: 3px;
+        }
+        #chat-container::-webkit-scrollbar-track,
+        .view::-webkit-scrollbar-track,
+        .modal-body-scroll::-webkit-scrollbar-track {
+            background-color: #1F2937; /* gray-800 */
+        }
+        .chat-bubble-ai {
+            background-color: #374151; /* gray-700 */
+            color: #F3F4F6; /* gray-100 */
+        }
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #4B5563;
+            border-bottom-color: #3B82F6;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .modal-transition {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .wizard-step {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .wizard-option-selected {
+            background-color: #3B82F6 !important;
+            color: #FFFFFF !important;
+            border-color: #2563EB !important;
+        }
+        .calendar-day {
+            transition: background-color 0.2s;
+        }
+         .calendar-day:hover {
+            background-color: #374151;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 h-screen flex antialiased text-gray-200">
 
-{% if current_user.is_authenticated %}
-  <!-- ✅ Sidebar only for logged-in users -->
-  <div class="w-full h-full lg:max-w-6xl lg:mx-auto lg:my-8 lg:rounded-2xl shadow-2xl flex overflow-hidden bg-gray-800">
+    <!-- Main Container -->
+    <div class="w-full h-full lg:max-w-6xl lg:mx-auto lg:my-8 lg:rounded-2xl shadow-2xl flex overflow-hidden bg-gray-800">
+        
+        <!-- Sidebar -->
+        <aside class="hidden md:flex w-1/3 lg:w-1/4 h-full bg-gray-800 border-r border-gray-700 flex-col p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="p-2 bg-blue-500 rounded-full">
+                    <i class="ph-bold ph-activity text-white text-2xl"></i>
+                        <a href="{{ url_for('logout') }}" class="text-teal-400 hover:text-teal-500 font-semibold">Logout</a>
 
-    <!-- Sidebar -->
-    <aside class="hidden md:flex w-1/3 lg:w-1/4 h-full bg-gray-800 border-r border-gray-700 flex-col p-6">
-      <div class="flex items-center gap-3 mb-8">
-        <div class="p-2 bg-blue-500 rounded-full">
-          <i class="ph-activity text-white text-2xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white">Arogya AI</h1>
+            </div>
+
+            <div class="flex items-center gap-4 mb-10">
+                <img src="https://placehold.co/48x48/4A5568/E2E8F0?text=H" alt="User Avatar" class="rounded-full">
+                <div>
+                    <p class="font-semibold text-gray-100">Hello, Harsh!</p>
+                    <p class="text-sm text-gray-400">Ready to train?</p>
+                </div>
+            </div>
+
+            <nav id="sidebar-nav" class="flex flex-col gap-4 text-gray-400">
+                <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 hover:text-white" onclick="showView('chat-view', this)">
+                    <i class="ph-fill ph-chats text-lg"></i>
+                    <span>AI Chat</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg bg-gray-700 text-white font-semibold" onclick="showView('dashboard-view', this)">
+                    <i class="ph-fill ph-chart-bar text-lg"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 hover:text-white" onclick="showView('workouts-view', this)">
+                    <i class="ph-fill ph-sneaker-move text-lg"></i>
+                    <span>Workouts</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 hover:text-white" onclick="showView('nutrition-view', this)">
+                    <i class="ph-fill ph-bowl-food text-lg"></i>
+                    <span>Nutrition</span>
+                </a>
+                 <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 hover:text-white" onclick="showView('schedule-view', this)">
+                    <i class="ph-fill ph-calendar text-lg"></i>
+                    <span>Schedule</span>
+                </a>
+            </nav>
+
+            <div class="mt-auto p-4 bg-gray-700/50 rounded-lg">
+                <h3 class="font-semibold text-white mb-3">Today's Vitals</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2 text-gray-300">
+                            <i class="ph-fill ph-heartbeat text-red-500"></i>
+                            <span>Heart Rate</span>
+                        </div>
+                        <span class="font-medium text-gray-100">72 bpm</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2 text-gray-300">
+                           <i class="ph-fill ph-drop-half-bottom text-blue-400"></i>
+                            <span>Blood Pressure</span>
+                        </div>
+                        <span class="font-medium text-gray-100">120/80</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2 text-gray-300">
+                           <i class="ph-fill ph-thermometer-cold text-green-400"></i>
+                            <span>Temperature</span>
+                        </div>
+                        <span class="font-medium text-gray-100">98.6°F</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="w-full md:w-2/3 lg:w-3/4 h-full flex flex-col bg-gray-850">
+            <!-- ====================================================== -->
+            <!-- AI CHAT VIEW -->
+            <!-- ====================================================== -->
+            <div id="chat-view" class="view hidden h-full flex flex-col">
+                <!-- Header -->
+                <header class="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-850 z-10">
+                    <h2 class="text-lg font-semibold text-white">AI Fitness Coach</h2>
+                    <div class="flex items-center gap-3">
+                        <button class="p-2 rounded-full hover:bg-gray-700">
+                            <i class="ph-fill ph-phone text-gray-400 text-xl"></i>
+                        </button>
+                        <button class="p-2 rounded-full hover:bg-gray-700">
+                            <i class="ph-fill ph-video-camera text-gray-400 text-xl"></i>
+                        </button>
+                    </div>
+                </header>
+                
+                <!-- Chat Messages -->
+                <div id="chat-container" class="flex-1 p-6 overflow-y-auto">
+                    <div class="flex flex-col gap-4">
+                        <!-- Initial AI Welcome Message -->
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
+                                <i class="ph-fill ph-robot text-gray-300 text-2xl"></i>
+                            </div>
+                            <div class="chat-bubble-ai p-4 rounded-2xl rounded-tl-none max-w-lg shadow-sm">
+                                <p class="text-sm">
+                                    Hello Harsh! I'm Arogya, your personal AI fitness assistant. I can help you with workout plans, nutrition advice, and tips to improve your overall fitness. How can I help you today?
+                                </p>
+                                <p class="text-xs text-gray-400 mt-2">Just now</p>
+                            </div>
+                        </div>
+                        <!-- More messages will be appended here -->
+                    </div>
+                </div>
+
+                <!-- Suggestion Chips -->
+                <div class="px-6 pb-2">
+                    <div class="flex flex-wrap gap-2">
+                        <button class="suggestion-chip bg-gray-700 text-gray-200 text-sm px-4 py-2 rounded-full hover:bg-gray-600" onclick="useSuggestion('How can I improve my stamina?')">"How to improve stamina?"</button>
+                        <button class="suggestion-chip bg-gray-700 text-gray-200 text-sm px-4 py-2 rounded-full hover:bg-gray-600" onclick="useSuggestion('What are good post-workout meals?')">"Post-workout meal ideas?"</button>
+                        <button class="suggestion-chip bg-gray-700 text-gray-200 text-sm px-4 py-2 rounded-full hover:bg-gray-600" onclick="useSuggestion('Suggest a 15-minute home workout')">"15-min home workout"</button>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-6 bg-gray-850 border-t border-gray-700">
+                    <div class="flex items-center bg-gray-700 rounded-xl p-2">
+                        <input type="text" id="userInput" placeholder="Type your message here..." class="flex-1 bg-transparent border-none focus:ring-0 text-gray-100 placeholder-gray-400 px-3 py-2">
+                        <button class="p-2 rounded-full hover:bg-gray-600">
+                            <i class="ph-fill ph-microphone text-gray-300 text-xl"></i>
+                        </button>
+                        <button id="sendButton" class="p-3 rounded-xl bg-blue-500 hover:bg-blue-600 ml-2 transition-colors">
+                            <i class="ph-fill ph-paper-plane-tilt text-white text-xl"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Arogya AI is for informational purposes and is not a substitute for professional medical advice.</p>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- DASHBOARD VIEW -->
+            <!-- ====================================================== -->
+            <div id="dashboard-view" class="view h-full flex flex-col">
+                <header class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-white">Fitness Dashboard</h2>
+                </header>
+                <div class="flex-1 p-6 overflow-y-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Weekly Summary -->
+                        <div class="bg-gray-800 p-6 rounded-lg col-span-1 md:col-span-2">
+                            <h3 class="font-semibold text-white mb-4">Weekly Summary</h3>
+                            <div class="flex justify-around items-center text-center">
+                                <div>
+                                    <i class="ph-fill ph-fire text-4xl text-orange-400"></i>
+                                    <p class="text-2xl font-bold mt-2">1,250</p>
+                                    <p class="text-sm text-gray-400">Calories Burned</p>
+                                </div>
+                                <div>
+                                    <i class="ph-fill ph-timer text-4xl text-green-400"></i>
+                                    <p class="text-2xl font-bold mt-2">150</p>
+                                    <p class="text-sm text-gray-400">Active Minutes</p>
+                                </div>
+                                <div>
+                                    <i class="ph-fill ph-sneaker-move text-4xl text-blue-400"></i>
+                                    <p class="text-2xl font-bold mt-2">4</p>
+                                    <p class="text-sm text-gray-400">Workouts</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Workout Streak -->
+                        <div class="bg-gray-800 p-6 rounded-lg flex flex-col items-center justify-center">
+                            <h3 class="font-semibold text-white mb-2">Workout Streak</h3>
+                            <div class="flex items-center gap-2 text-yellow-400">
+                                <i class="ph-fill ph-star text-3xl"></i>
+                                <span class="text-4xl font-bold">12</span>
+                            </div>
+                            <p class="text-sm text-gray-400">days in a row!</p>
+                        </div>
+                        
+                        <!-- Weekly Performance Report -->
+                        <div class="bg-gray-800 p-6 rounded-lg col-span-1 md:col-span-3">
+                            <h3 class="font-semibold text-white mb-4">📈 Weekly Performance Report</h3>
+                            <div id="workoutReportContainer" class="text-sm text-gray-300">
+                                <!-- Report will be injected here by JS -->
+                            </div>
+                        </div>
+
+                        <!-- AI Weekly Insights -->
+                        <div class="bg-gray-800 p-6 rounded-lg col-span-1 md:col-span-3">
+                            <h3 class="font-semibold text-white mb-4">✨ AI-Powered Weekly Insights</h3>
+                            <div id="insightsResult" class="text-sm text-gray-300 min-h-[80px]">
+                                Click the button to get a personalized analysis of your week's performance and tips for the week ahead.
+                            </div>
+                            <button id="getInsightsButton" class="mt-4 bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
+                                Get My Weekly Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- WORKOUTS VIEW -->
+            <!-- ====================================================== -->
+            <div id="workouts-view" class="view hidden h-full flex flex-col">
+                 <header class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-white">Workout Library</h2>
+                </header>
+                <div class="flex-1 p-6 overflow-y-auto space-y-6">
+                    <!-- AI Custom Workout Generator -->
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <div class="flex justify-between items-start">
+                           <div>
+                             <h3 class="text-lg font-bold text-white">✨ AI Workout Wizard</h3>
+                             <p class="text-sm text-gray-400 mt-1">Answer a few questions to generate your perfect workout.</p>
+                           </div>
+                           <button id="resetWizardButton" class="text-sm text-blue-400 hover:text-blue-300 hidden">Start Over</button>
+                        </div>
+
+                        <div id="workoutWizardContainer" class="mt-6">
+                            <!-- Step 1: Fitness Level -->
+                            <div id="wizard-step-1" class="wizard-step">
+                                <label class="block text-md font-semibold text-gray-200 mb-3">What's your current fitness level?</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="1" data-value="Beginner">
+                                        <i class="ph-fill ph-baby text-2xl text-green-400 mb-2"></i>
+                                        <h4 class="font-semibold">Beginner</h4>
+                                        <p class="text-xs text-gray-400">Just starting out</p>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="1" data-value="Intermediate">
+                                        <i class="ph-fill ph-person-simple-walk text-2xl text-yellow-400 mb-2"></i>
+                                        <h4 class="font-semibold">Intermediate</h4>
+                                        <p class="text-xs text-gray-400">Workout regularly</p>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="1" data-value="Advanced">
+                                        <i class="ph-fill ph-person-simple-run text-2xl text-red-400 mb-2"></i>
+                                        <h4 class="font-semibold">Advanced</h4>
+                                        <p class="text-xs text-gray-400">Very experienced</p>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Step 2: Weekly Activity Level -->
+                            <div id="wizard-step-2" class="wizard-step hidden opacity-0">
+                                <label class="block text-md font-semibold text-gray-200 mb-3">How active are you on a weekly basis?</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="2" data-value="Sedentary (mostly sitting)">
+                                        <i class="ph-fill ph-sofa text-2xl text-gray-400 mb-2"></i><h4 class="font-semibold">Sedentary</h4><p class="text-xs text-gray-400">Mostly sitting</p>
+                                    </button>
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="2" data-value="Lightly Active (walking, light tasks)">
+                                         <i class="ph-fill ph-person-simple-walk text-2xl text-blue-300 mb-2"></i><h4 class="font-semibold">Lightly Active</h4><p class="text-xs text-gray-400">Occasional walks</p>
+                                    </button>
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="2" data-value="Moderately Active (exercise 3-4 times a week)">
+                                        <i class="ph-fill ph-sneaker-move text-2xl text-green-400 mb-2"></i><h4 class="font-semibold">Moderately Active</h4><p class="text-xs text-gray-400">Exercise 3-4x/week</p>
+                                    </button>
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="2" data-value="Very Active (intense exercise most days)">
+                                         <i class="ph-fill ph-person-simple-run text-2xl text-orange-400 mb-2"></i><h4 class="font-semibold">Very Active</h4><p class="text-xs text-gray-400">Intense daily exercise</p>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Step 3: Preferred Workout Style -->
+                            <div id="wizard-step-3" class="wizard-step hidden opacity-0">
+                                <label class="block text-md font-semibold text-gray-200 mb-3">What kind of workout do you prefer?</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="3" data-value="Strength Training">
+                                        <i class="ph-fill ph-barbell text-2xl text-red-400 mb-2"></i><h4 class="font-semibold">Strength Training</h4>
+                                    </button>
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="3" data-value="Cardio & HIIT">
+                                        <i class="ph-fill ph-heartbeat text-2xl text-pink-400 mb-2"></i><h4 class="font-semibold">Cardio & HIIT</h4>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="3" data-value="Yoga & Flexibility">
+                                         <i class="ph-fill ph-person-arms-spread text-2xl text-purple-400 mb-2"></i><h4 class="font-semibold">Yoga & Flexibility</h4>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="3" data-value="A mix of everything">
+                                        <i class="ph-fill ph-shuffle-angular text-2xl text-yellow-400 mb-2"></i><h4 class="font-semibold">A Mix of Everything</h4>
+                                    </button>
+                                </div>
+                            </div>
+                             <!-- Step 4: Day of the Week -->
+                             <div id="wizard-step-4" class="wizard-step hidden opacity-0">
+                               <label class="block text-md font-semibold text-gray-200 mb-3">Which day are you planning for?</label>
+                                <div class="grid grid-cols-3 md:grid-cols-4 gap-3">
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Monday">Mon</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Tuesday">Tue</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Wednesday">Wed</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Thursday">Thu</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Friday">Fri</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Saturday">Sat</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Sunday">Sun</button>
+                                    <button class="wizard-option p-3 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="4" data-value="Any day">Any</button>
+                                </div>
+                            </div>
+                            <!-- Step 5: Primary Goal -->
+                            <div id="wizard-step-5" class="wizard-step hidden opacity-0">
+                                <label class="block text-md font-semibold text-gray-200 mb-3">What's your primary goal?</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="5" data-value="Build Muscle">
+                                        <i class="ph-fill ph-barbell text-2xl text-blue-400 mb-2"></i>
+                                        <h4 class="font-semibold">Build Muscle</h4>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="5" data-value="Lose Fat">
+                                        <i class="ph-fill ph-fire text-2xl text-orange-400 mb-2"></i>
+                                        <h4 class="font-semibold">Lose Fat</h4>
+                                    </button>
+                                     <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="5" data-value="Improve Endurance">
+                                        <i class="ph-fill ph-timer text-2xl text-green-400 mb-2"></i>
+                                        <h4 class="font-semibold">Improve Endurance</h4>
+                                    </button>
+                                    <button class="wizard-option text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="5" data-value="Increase Flexibility">
+                                        <i class="ph-fill ph-person-arms-spread text-2xl text-purple-400 mb-2"></i>
+                                        <h4 class="font-semibold">Increase Flexibility</h4>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Step 6: Time -->
+                            <div id="wizard-step-6" class="wizard-step hidden opacity-0">
+                               <label class="block text-md font-semibold text-gray-200 mb-3">How much time do you have?</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="6" data-value="15 minutes">15 min</button>
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="6" data-value="30 minutes">30 min</button>
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="6" data-value="45 minutes">45 min</button>
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="6" data-value="60 minutes">60 min</button>
+                                </div>
+                            </div>
+                            <!-- Step 7: Equipment -->
+                            <div id="wizard-step-7" class="wizard-step hidden opacity-0">
+                                <label class="block text-md font-semibold text-gray-200 mb-3">What equipment is available?</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="7" data-value="None (Bodyweight)">No Equipment</button>
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="7" data-value="Basic (Dumbbells, Bands)">Basic</button>
+                                    <button class="wizard-option p-4 bg-gray-700 hover:bg-gray-600 rounded-lg border-2 border-transparent transition-all" data-step="7" data-value="Full Gym">Full Gym</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 text-center">
+                            <button id="generateWorkoutButton" class="w-full md:w-1/2 bg-blue-600 text-white font-semibold px-5 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                               Generate My Workout
+                            </button>
+                        </div>
+                        
+                        <div id="generatedWorkoutContainer" class="mt-6"></div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-white mb-4">Recommended For You</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Workout Card -->
+                            <div class="bg-gray-800 rounded-lg p-4 flex gap-4 items-center">
+                                <img src="https://placehold.co/80x80/374151/FFFFFF?text=💪" alt="workout icon" class="rounded-md"/>
+                                <div>
+                                    <span class="text-xs bg-green-500 text-white font-bold px-2 py-0.5 rounded-full">Beginner</span>
+                                    <h4 class="font-semibold text-white mt-1">Full Body Strength</h4>
+                                    <p class="text-sm text-gray-400">30 min • 150 kcal</p>
+                                </div>
+                                <button class="ml-auto p-3 rounded-full bg-blue-500 hover:bg-blue-600" onclick="showWorkoutDetails('fullBodyStrength')">
+                                    <i class="ph-fill ph-caret-right text-white text-xl"></i>
+                                </button>
+                            </div>
+                             <!-- Workout Card -->
+                            <div class="bg-gray-800 rounded-lg p-4 flex gap-4 items-center">
+                                <img src="https://placehold.co/80x80/374151/FFFFFF?text=🔥" alt="workout icon" class="rounded-md"/>
+                                <div>
+                                    <span class="text-xs bg-yellow-500 text-white font-bold px-2 py-0.5 rounded-full">Intermediate</span>
+                                    <h4 class="font-semibold text-white mt-1">HIIT Cardio Blast</h4>
+                                    <p class="text-sm text-gray-400">20 min • 250 kcal</p>
+                                </div>
+                                 <button class="ml-auto p-3 rounded-full bg-blue-500 hover:bg-blue-600" onclick="showWorkoutDetails('hiitCardio')">
+                                    <i class="ph-fill ph-caret-right text-white text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ====================================================== -->
+            <!-- NUTRITION VIEW -->
+            <!-- ====================================================== -->
+            <div id="nutrition-view" class="view hidden h-full flex flex-col">
+                 <header class="p-4 border-b border-gray-700">
+                    <h2 class="text-xl font-semibold text-white">AI Nutrition Helper</h2>
+                </header>
+                <div class="flex-1 p-6 overflow-y-auto space-y-6">
+                    <!-- AI Meal Plan Generator -->
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="font-semibold text-white mb-4">✨ AI Meal Plan Generator</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label for="dietaryGoal" class="block text-sm font-medium text-gray-300 mb-1">Dietary Goal</label>
+                                <select id="dietaryGoal" class="w-full bg-gray-700 border-gray-600 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option>Balanced Diet</option>
+                                    <option>High Protein</option>
+                                    <option>Low Carb</option>
+                                    <option>Vegetarian</option>
+                                    <option>Vegan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="targetCalories" class="block text-sm font-medium text-gray-300 mb-1">Target Calories</label>
+                                <input type="number" id="targetCalories" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" value="2000" placeholder="e.g., 2000">
+                            </div>
+                            <div>
+                                <label for="allergies" class="block text-sm font-medium text-gray-300 mb-1">Allergies/Dislikes</label>
+                                <input type="text" id="allergies" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" placeholder="e.g., Peanuts, Dairy">
+                            </div>
+                        </div>
+                        <button id="generateMealPlanButton" class="w-full md:w-auto bg-blue-500 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                           Create My Meal Plan
+                        </button>
+                        <div id="generatedMealPlanContainer" class="mt-6"></div>
+                    </div>
+
+                    <!-- AI Food Logger -->
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="font-semibold text-white mb-4">✨ AI Food Logger & Calorie Counter</h3>
+                        <p class="text-sm text-gray-400 mb-4">Describe the meal you ate, and the AI will estimate its nutritional value.</p>
+                        <div>
+                            <label for="mealDescription" class="block text-sm font-medium text-gray-300 mb-1">Describe your meal</label>
+                            <textarea id="mealDescription" rows="3" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" placeholder="e.g., A bowl of oatmeal with a handful of blueberries, walnuts, and a drizzle of honey."></textarea>
+                        </div>
+                        <button id="logMealButton" class="mt-4 w-full md:w-auto bg-blue-500 text-white font-semibold px-5 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                           Analyze My Meal
+                        </button>
+                        <div id="loggedMealContainer" class="mt-6"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- SCHEDULE VIEW (LOGBOOK) -->
+            <!-- ====================================================== -->
+            <div id="schedule-view" class="view hidden h-full flex flex-col">
+                 <header class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <button id="prevMonthBtn" class="p-2 rounded-lg hover:bg-gray-700"><i class="ph-bold ph-caret-left text-white"></i></button>
+                    <h2 id="calendar-header" class="text-xl font-semibold text-white">My Workout Log</h2>
+                    <button id="nextMonthBtn" class="p-2 rounded-lg hover:bg-gray-700"><i class="ph-bold ph-caret-right text-white"></i></button>
+                </header>
+                <div class="grid grid-cols-7 text-center text-sm text-gray-400 font-semibold p-2 border-b border-gray-700">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 flex-1">
+                    <!-- Calendar days will be generated by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Workout Details Modal -->
+    <div id="workoutModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden opacity-0 modal-transition">
+        <div id="modalContent" class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col modal-transition transform scale-95">
+            <header class="p-4 flex justify-between items-center border-b border-gray-700">
+                <h3 id="modalTitle" class="text-xl font-bold text-white">Workout Details</h3>
+                <button onclick="hideWorkoutDetails()" class="p-2 rounded-full hover:bg-gray-700">
+                    <i class="ph-bold ph-x text-white text-xl"></i>
+                </button>
+            </header>
+            <div id="modalBody" class="p-6 overflow-y-auto">
+                <!-- Content will be injected by JS -->
+            </div>
         </div>
-        <h1 class="text-xl font-bold text-white">Arogya AI</h1>
-      </div>
+    </div>
 
-      <nav id="sidebar-nav" class="flex flex-col gap-4 text-gray-400">
-        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg bg-gray-700 text-white font-semibold" onclick="showView('chat-view', this)">
-          <i class="ph-chats-fill text-lg"></i><span>AI Chat</span>
-        </a>
-        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('dashboard-view', this)">
-          <i class="ph-chart-bar-fill text-lg"></i><span>Dashboard</span>
-        </a>
-        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('workouts-view', this)">
-          <i class="ph-sneaker-move-fill text-lg"></i><span>Workouts</span>
-        </a>
-        <a href="#" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700" onclick="showView('schedule-view', this)">
-          <i class="ph-calendar-fill text-lg"></i><span>Schedule</span>
-        </a>
-      </nav>
+    <!-- Log Workout Modal -->
+    <div id="logWorkoutModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden opacity-0 modal-transition">
+        <div id="logWorkoutModalContent" class="bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg modal-transition transform scale-95 flex flex-col max-h-[90vh]">
+            <header class="p-4 flex justify-between items-center border-b border-gray-700">
+                <h3 class="text-xl font-bold text-white">Log Today's Workout</h3>
+                 <button onclick="hideLogWorkoutModal()" class="p-2 rounded-full hover:bg-gray-700"><i class="ph-bold ph-x text-white text-xl"></i></button>
+            </header>
+            <div class="p-6 space-y-4 overflow-y-auto modal-body-scroll">
+                <input type="hidden" id="workoutLogDate">
+                <div>
+                    <label for="workoutTitle" class="block text-sm font-medium text-gray-300 mb-1">Workout Title</label>
+                    <input type="text" id="workoutTitle" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" placeholder="e.g., Morning Run, Chest Day">
+                </div>
+                <div>
+                    <label for="workoutDuration" class="block text-sm font-medium text-gray-300 mb-1">Duration (minutes)</label>
+                    <input type="number" id="workoutDuration" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" placeholder="e.g., 45">
+                </div>
 
-      <!-- User profile -->
-      <div class="mt-auto p-4 bg-gray-900/50 rounded-lg">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white">
-            {{ user.name[0] if user.name else 'A' }}
-          </div>
-          <div>
-            <h4 class="font-semibold text-white truncate">{{ user.name }}</h4>
-            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
-          </div>
-          <a href="/logout" title="Logout" class="ml-auto p-2 rounded-full hover:bg-gray-700 transition-colors">
-            <i class="ph-sign-out-bold text-red-500 text-xl"></i>
-          </a>
+                <div id="exercises-container" class="space-y-3">
+                    <!-- Dynamic exercises will be added here -->
+                </div>
+                 <button onclick="addExerciseToLogForm()" class="w-full text-sm p-2 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-plus-circle"></i> Add Exercise
+                </button>
+                <div>
+                     <label for="workoutNotes" class="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+                     <textarea id="workoutNotes" rows="3" class="w-full bg-gray-700 border-gray-600 rounded-md p-2" placeholder="How did it feel? Any PRs?"></textarea>
+                </div>
+            </div>
+            <footer class="p-4 border-t border-gray-700 flex justify-end gap-3">
+                <button onclick="hideLogWorkoutModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 font-semibold">Cancel</button>
+                <button onclick="saveWorkoutLog()" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold">Save Workout</button>
+            </footer>
         </div>
-      </div>
-    </aside>
+    </div>
 
-    <!-- Main Content -->
-    <main class="w-full md:w-2/3 lg:w-3/4 h-full flex flex-col bg-gray-850">
-      <div id="chat-view" class="view h-full flex flex-col">
-        <header class="p-4 border-b border-gray-700">
-          <h2 class="text-lg font-semibold">AI Fitness Coach</h2>
-        </header>
-        <div id="chat-box" class="flex-1 p-6 overflow-y-auto"></div>
-        <div class="p-6 border-t border-gray-700 flex items-center bg-gray-850">
-          <input type="text" id="user-input" placeholder="Type your message..." class="flex-1 bg-gray-700 rounded-xl px-3 py-2 text-white">
-          <button id="send-btn" class="ml-2 p-3 bg-blue-500 rounded-xl hover:bg-blue-600">
-            <i class="ph-paper-plane-tilt-fill text-white text-xl"></i>
-          </button>
-        </div>
-      </div>
-    </main>
-  </div>
-{% else %}
-  <!-- ✅ Topbar for logged-out users -->
-  <div class="w-full h-screen flex items-center justify-center flex-col">
-    <h1 class="text-3xl font-bold text-white mb-4">Welcome to Arogya AI</h1>
-    <a href="{{ url_for('login') }}" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl text-white font-semibold">Login to Continue</a>
-  </div>
-{% endif %}
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, onSnapshot, query, where, Timestamp, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+        // --- Your web app's Firebase configuration ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyCcnPc0BZ_LhsJA9pTtOddkCCTh8efl3Gc",
+          authDomain: "arogya-ai-7315f.firebaseapp.com",
+          projectId: "arogya-ai-7315f",
+          storageBucket: "arogya-ai-7315f.appspot.com",
+          messagingSenderId: "193957808869",
+          appId: "1:193957808869:web:7aa1f0b2a901bc8d85a20c",
+          measurementId: "G-099T2FMKT9"
+        };
+        
+        // --- App State ---
+        let db, auth, userId;
+        let currentYear, currentMonth;
+        let calendarLogUnsubscribe = null;
+        let chatHistory = [];
+
+        // --- Initialize Firebase and App ---
+        async function initialize() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                const analytics = getAnalytics(app);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        initializeAppUI();
+                    } else {
+                        signInAnonymously(auth).catch(error => {
+                            console.error("Anonymous sign-in failed:", error);
+                            if (error.code === 'auth/admin-restricted-operation') {
+                                document.body.innerHTML = `
+                                    <div class="w-full h-full flex items-center justify-center text-white p-8 bg-gray-900">
+                                        <div class="bg-red-800/50 border border-red-500 rounded-lg p-6 max-w-2xl text-center">
+                                            <h1 class="text-2xl font-bold text-red-300 mb-4">Configuration Error: Anonymous Sign-In is Disabled</h1>
+                                            <p class="text-lg mb-4">To fix this, you need to enable Anonymous Sign-in in your Firebase project.</p>
+                                            <div class="text-left space-y-2 text-base">
+                                                <p>1. Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-300 underline">Firebase Console</a> and select your project ('arogya-ai-7315f').</p>
+                                                <p>2. In the left menu, go to <strong class="font-semibold">Build > Authentication</strong>.</p>
+                                                <p>3. Click the <strong class="font-semibold">Sign-in method</strong> tab.</p>
+                                                <p>4. Click on <strong class="font-semibold">"Anonymous"</strong> in the list of providers.</p>
+                                                <p>5. Click the <strong class="font-semibold">Enable</strong> toggle switch and click <strong class="font-semibold">Save</strong>.</p>
+                                            </div>
+                                            <p class="mt-6 text-gray-300">After saving, please refresh this page.</p>
+                                        </div>
+                                    </div>`;
+                            }
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.body.innerHTML = '<div class="w-full h-full flex items-center justify-center text-red-500"><h1>Error: Could not connect to services.</h1></div>';
+            }
+        }
+
+        function initializeAppUI() {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+
+            // Pre-load chat history with the initial welcome message
+            const initialAiMessage = "Hello Harsh! I'm Arogya, your personal AI fitness assistant. I can help you with workout plans, nutrition advice, and tips to improve your overall fitness. How can I help you today?";
+            chatHistory.push({ role: "model", parts: [{ text: initialAiMessage }] });
+            
+            attachInitialEventListeners();
+            // Start on dashboard view by default
+            showView('dashboard-view', document.querySelector('.nav-link[onclick*="dashboard-view"]'));
+        }
+
+        // --- Gemini API Configuration ---
+        const apiKey = "AIzaSyDPHBRYEjVquVdPt1I44MHWzbxpyivMNW4"; // This will be handled by the environment.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        // --- Helper Functions ---
+        const showLoader = (element) => {
+            element.innerHTML = '<div class="flex justify-center items-center p-4"><div class="loader"></div></div>';
+        };
+
+        const handleApiError = (element, error) => {
+            console.error("API/Fetch Error:", error);
+            let errorMessage = "Sorry, I couldn't generate a response due to an error. Please try again later.";
+            element.innerHTML = `<p class="text-red-400 text-sm p-4 bg-red-900/50 rounded-lg">${errorMessage}</p>`;
+        };
+
+        function simpleMarkdownToHtml(text) {
+             return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\n\* (.*)/g, '<br>• $1') // List items
+                .replace(/\n/g, '<br>'); // New lines
+        }
+        
+        // --- API Call Functions ---
+        async function getAIResponse(history, systemInstruction) {
+            const payload = {
+                contents: history,
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+            };
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) { throw new Error(`API Error: ${response.status} ${await response.text()}`); }
+            return response.json();
+        }
+        
+        async function getAIStructuredResponse(prompt, schema) {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+            };
+
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) { throw new Error(`API Error: ${response.status} ${await response.text()}`); }
+            return response.json();
+        }
+
+        // --- Feature: Dashboard Weekly Report ---
+        async function generateWeeklyReport() {
+            const reportContainer = document.getElementById('workoutReportContainer');
+            if (!userId || !reportContainer) return;
+            showLoader(reportContainer);
+            const today = new Date();
+            const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const workoutsRef = collection(db, `users/${userId}/workouts`);
+            const q = query(workoutsRef, where("date", ">=", sevenDaysAgo));
+
+            try {
+                const querySnapshot = await getDocs(q);
+                let totalWorkouts = 0;
+                let totalMinutes = 0;
+                const recentWorkouts = [];
+
+                querySnapshot.forEach(doc => {
+                    const workout = doc.data();
+                    totalWorkouts++;
+                    totalMinutes += workout.durationMinutes || 0;
+                    recentWorkouts.push(workout);
+                });
+
+                let html = '<div class="grid grid-cols-2 gap-4">';
+                html += `<div class="bg-gray-700/50 p-4 rounded-lg text-center"><p class="text-3xl font-bold text-white">${totalWorkouts}</p><p class="text-sm text-gray-400">Workouts This Week</p></div>`;
+                html += `<div class="bg-gray-700/50 p-4 rounded-lg text-center"><p class="text-3xl font-bold text-white">${totalMinutes}</p><p class="text-sm text-gray-400">Minutes Trained</p></div></div>`;
+                html += '<h4 class="font-semibold mt-6 mb-3">Recent Activity</h4>';
+                
+                if (recentWorkouts.length > 0) {
+                     html += '<div class="space-y-2">';
+                     recentWorkouts.sort((a, b) => b.date.toMillis() - a.date.toMillis()).slice(0, 3).forEach(workout => {
+                         html += `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center"><div><p class="font-semibold text-white">${workout.title}</p><p class="text-xs text-gray-400">${workout.date.toDate().toLocaleDateString()}</p></div><span class="font-medium text-gray-300">${workout.durationMinutes} min</span></div>`;
+                     });
+                     html += '</div>';
+                } else {
+                    html += '<p class="text-gray-400">No workouts logged this week. Let\'s get started!</p>';
+                }
+                reportContainer.innerHTML = html;
+            } catch (error) {
+                console.error("Error generating report: ", error);
+                reportContainer.innerHTML = '<p class="text-red-400">Could not load workout report.</p>';
+            }
+        }
+
+        // --- Feature: Workout Logbook ---
+        function renderCalendar(year, month) {
+            const calendarGrid = document.getElementById('calendar-grid');
+            if (!calendarGrid) return;
+            calendarGrid.innerHTML = '';
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendar-header').textContent = `${monthNames[month]} ${year}`;
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) { calendarGrid.insertAdjacentHTML('beforeend', '<div></div>'); }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = document.createElement('div');
+                cell.id = `day-${dateStr}`;
+                cell.className = "calendar-day border-t border-l border-gray-700 p-2 cursor-pointer";
+                cell.onclick = () => showLogWorkoutModal(dateStr);
+                cell.innerHTML = `<span class="font-semibold">${day}</span><div class="event-container text-xs mt-1 space-y-1"></div>`;
+                calendarGrid.appendChild(cell);
+            }
+            listenForWorkoutLogs(year, month);
+        }
+
+        function listenForWorkoutLogs(year, month) {
+            if (calendarLogUnsubscribe) calendarLogUnsubscribe();
+            if (!userId) return;
+            const startDate = new Date(year, month, 1);
+            const endDate = new Date(year, month + 1, 0);
+            const logsRef = collection(db, `users/${userId}/workouts`);
+            const q = query(logsRef, where("date", ">=", startDate), where("date", "<=", endDate));
+            calendarLogUnsubscribe = onSnapshot(q, (snapshot) => {
+                document.querySelectorAll('.event-container').forEach(c => c.innerHTML = '');
+                snapshot.forEach((doc) => {
+                    const log = doc.data();
+                    const logDate = log.date.toDate();
+                    const dateStr = `${logDate.getFullYear()}-${String(logDate.getMonth() + 1).padStart(2, '0')}-${String(logDate.getDate()).padStart(2, '0')}`;
+                    const dayCell = document.querySelector(`#day-${dateStr} .event-container`);
+                    if (dayCell) {
+                       dayCell.innerHTML += `<div class="bg-blue-600 text-white rounded px-1 truncate" title="${log.title}"><i class="ph-fill ph-sneaker-move"></i> Logged</div>`;
+                    }
+                });
+            });
+        }
+        
+        window.showLogWorkoutModal = (dateStr) => {
+            document.getElementById('workoutLogDate').value = dateStr;
+            document.getElementById('workoutTitle').value = ''; document.getElementById('workoutDuration').value = ''; document.getElementById('workoutNotes').value = '';
+            document.getElementById('exercises-container').innerHTML = ''; 
+            addExerciseToLogForm(); 
+            const modal = document.getElementById('logWorkoutModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('#logWorkoutModalContent').classList.remove('scale-95'); }, 10);
+        };
+        
+        window.hideLogWorkoutModal = () => {
+            const modal = document.getElementById('logWorkoutModal');
+            modal.classList.add('opacity-0'); modal.querySelector('#logWorkoutModalContent').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+        
+        window.addExerciseToLogForm = () => {
+            const container = document.getElementById('exercises-container');
+            const exerciseCount = container.children.length;
+            const newExerciseHTML = `<div class="exercise-entry bg-gray-700/50 p-3 rounded-lg"><input type="text" class="w-full bg-gray-600 border-gray-500 rounded-md p-2 text-sm" placeholder="Exercise ${exerciseCount + 1} Name"><div class="grid grid-cols-2 gap-2 mt-2"><input type="number" class="w-full bg-gray-600 border-gray-500 rounded-md p-2 text-sm" placeholder="Sets"><input type="text" class="w-full bg-gray-600 border-gray-500 rounded-md p-2 text-sm" placeholder="Reps (e.g., 12, 10, 8)"></div></div>`;
+            container.insertAdjacentHTML('beforeend', newExerciseHTML);
+        };
+
+        window.saveWorkoutLog = async () => {
+            const dateStr = document.getElementById('workoutLogDate').value;
+            const title = document.getElementById('workoutTitle').value;
+            const duration = parseInt(document.getElementById('workoutDuration').value, 10);
+            const notes = document.getElementById('workoutNotes').value;
+            if (!title || !duration || !dateStr || !userId) { alert("Please fill in workout title and duration."); return; }
+            const exercises = [];
+            document.querySelectorAll('.exercise-entry').forEach(entry => {
+                const name = entry.querySelector('input[placeholder*="Name"]').value;
+                const sets = entry.querySelector('input[placeholder="Sets"]').value;
+                const reps = entry.querySelector('input[placeholder*="Reps"]').value;
+                if (name) { exercises.push({ name, sets, reps }); }
+            });
+            const workoutData = { title, durationMinutes: duration, notes, exercises, date: Timestamp.fromDate(new Date(dateStr + 'T12:00:00')), createdAt: serverTimestamp() };
+            try { await addDoc(collection(db, `users/${userId}/workouts`), workoutData); hideLogWorkoutModal(); } catch (error) { console.error("Error saving workout log:", error); }
+        };
+
+        // --- Feature: AI Chat ---
+        const handleSendMessage = async () => {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 1. Append user message and add to history
+            const chatContainer = document.getElementById('chat-container').querySelector('.flex-col');
+            const userMessageHtml = `
+                <div class="flex items-start gap-3 justify-end">
+                    <div class="chat-bubble-user p-4 rounded-2xl rounded-tr-none max-w-lg shadow-sm">
+                        <p class="text-sm">${message}</p>
+                        <p class="text-xs text-gray-200 mt-2 text-right">Just now</p>
+                    </div>
+                </div>`;
+            chatContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+            chatHistory.push({ role: "user", parts: [{ text: message }] });
+            
+            // 2. Clear input and show typing indicator
+            userInput.value = '';
+            const typingIndicatorHtml = `
+                <div id="typing-indicator" class="flex items-start gap-3">
+                    <div class="p-2 bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
+                        <i class="ph-fill ph-robot text-gray-300 text-2xl"></i>
+                    </div>
+                    <div class="chat-bubble-ai p-4 rounded-2xl rounded-tl-none max-w-lg shadow-sm">
+                       <div class="loader" style="width:20px; height:20px; border-width:2px;"></div>
+                    </div>
+                </div>`;
+            chatContainer.insertAdjacentHTML('beforeend', typingIndicatorHtml);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 3. Get AI response
+            try {
+                const systemInstruction = "You are Arogya, a world-class AI fitness and nutrition coach. Your name comes from the Sanskrit word for 'health'. Be encouraging, knowledgeable, and friendly. Provide clear, concise, and safe advice based on the entire conversation history. When giving fitness or nutrition advice, ALWAYS include a disclaimer that you are not a medical professional and the user should consult with a doctor before making any changes. Keep responses structured with markdown (like lists or bold text) for readability.";
+                const result = await getAIResponse(chatHistory, systemInstruction);
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't process that request.";
+
+                // Add AI response to history
+                chatHistory.push({ role: "model", parts: [{ text: text }] });
+
+                // Create and display AI message
+                const aiMessageContainer = document.createElement('div');
+                aiMessageContainer.className = "flex items-start gap-3";
+                aiMessageContainer.innerHTML = `
+                    <div class="p-2 bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
+                         <i class="ph-fill ph-robot text-gray-300 text-2xl"></i>
+                    </div>
+                    <div class="chat-bubble-ai p-4 rounded-2xl rounded-tl-none max-w-lg shadow-sm">
+                        <p class="text-sm"></p>
+                        <p class="text-xs text-gray-400 mt-2">Just now</p>
+                    </div>`;
+                aiMessageContainer.querySelector('.text-sm').innerHTML = simpleMarkdownToHtml(text);
+                
+                document.getElementById('typing-indicator').remove();
+                chatContainer.appendChild(aiMessageContainer);
+
+            } catch (error) {
+                // If API fails, remove user's last message from history
+                chatHistory.pop(); 
+                const errorBubble = document.getElementById('typing-indicator').querySelector('.chat-bubble-ai');
+                handleApiError(errorBubble, error)
+            } finally {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        };
+        
+        // --- Feature: AI Meal Planner ---
+        const handleGenerateMealPlan = async () => {
+            const container = document.getElementById('generatedMealPlanContainer');
+            const button = document.getElementById('generateMealPlanButton');
+            showLoader(container);
+            button.disabled = true;
+
+            const goal = document.getElementById('dietaryGoal').value;
+            const calories = document.getElementById('targetCalories').value;
+            const allergies = document.getElementById('allergies').value || "None";
+
+            const prompt = `Create a simple one-day meal plan for a user with the following requirements: - Dietary Goal: ${goal}, - Target Calories: Approximately ${calories} calories, - Allergies/Dislikes: ${allergies}. Provide simple meal names and a brief description for breakfast, lunch, dinner, and one snack.`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    breakfast: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } },
+                    lunch: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } },
+                    dinner: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } },
+                    snack: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } }
+                }
+            };
+
+            try {
+                const result = await getAIStructuredResponse(prompt, schema);
+                const plan = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+                const html = `
+                    <div class="space-y-4">
+                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-white">🍳 Breakfast: ${plan.breakfast.name}</h5>
+                            <p class="text-sm text-gray-300">${plan.breakfast.description}</p>
+                        </div>
+                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-white">🥗 Lunch: ${plan.lunch.name}</h5>
+                            <p class="text-sm text-gray-300">${plan.lunch.description}</p>
+                        </div>
+                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                             <h5 class="font-semibold text-white">🍎 Snack: ${plan.snack.name}</h5>
+                            <p class="text-sm text-gray-300">${plan.snack.description}</p>
+                        </div>
+                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-white">🍲 Dinner: ${plan.dinner.name}</h5>
+                            <p class="text-sm text-gray-300">${plan.dinner.description}</p>
+                        </div>
+                    </div>`;
+                container.innerHTML = html;
+            } catch (error) {
+                handleApiError(container, error);
+            } finally {
+                button.disabled = false;
+            }
+        };
+
+        // --- Feature: AI Food Logger ---
+        const handleLogMeal = async () => {
+            const container = document.getElementById('loggedMealContainer');
+            const button = document.getElementById('logMealButton');
+            const description = document.getElementById('mealDescription').value;
+            if (!description.trim()) {
+                container.innerHTML = '<p class="text-yellow-400 text-sm">Please describe your meal first.</p>';
+                return;
+            }
+            showLoader(container);
+            button.disabled = true;
+
+            const prompt = `Analyze the following meal description and provide an estimated nutritional breakdown: "${description}".`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    calories: { type: "NUMBER", description: "Estimated calories" },
+                    protein: { type: "NUMBER", description: "Estimated protein in grams" },
+                    carbs: { type: "NUMBER", description: "Estimated carbohydrates in grams" },
+                    fat: { type: "NUMBER", description: "Estimated fat in grams" },
+                    quick_summary: { type: "STRING", description: "A one-sentence summary of the meal's healthiness." }
+                }
+            };
+            try {
+                const result = await getAIStructuredResponse(prompt, schema);
+                const nutrition = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+                const html = `
+                    <div class="bg-gray-700/50 p-4 rounded-lg">
+                         <p class="text-sm text-gray-300 mb-3 italic">"${nutrition.quick_summary}"</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                            <div><p class="text-2xl font-bold text-white">${nutrition.calories}</p><p class="text-xs text-gray-400">Calories (est.)</p></div>
+                            <div><p class="text-2xl font-bold text-white">${nutrition.protein}g</p><p class="text-xs text-gray-400">Protein (est.)</p></div>
+                            <div><p class="text-2xl font-bold text-white">${nutrition.carbs}g</p><p class="text-xs text-gray-400">Carbs (est.)</p></div>
+                            <div><p class="text-2xl font-bold text-white">${nutrition.fat}g</p><p class="text-xs text-gray-400">Fat (est.)</p></div>
+                        </div>
+                    </div>`;
+                container.innerHTML = html;
+            } catch (error) {
+                handleApiError(container, error);
+            } finally {
+                button.disabled = false;
+            }
+        };
+        
+        // --- Pre-defined Workout Data & Modal ---
+        const staticWorkouts = {
+            fullBodyStrength: { title: "Full Body Strength", details: "30 min • 150 kcal • Beginner", exercises: [{ name: "Jumping Jacks", sets: "1", reps: "3 min warm-up" }, { name: "Bodyweight Squats", sets: "3", reps: "15" }, { name: "Push-ups (on knees if needed)", sets: "3", reps: "10" }, { name: "Alternating Lunges", sets: "3", reps: "12 per leg" }, { name: "Plank", sets: "3", reps: "30-second hold" }, { name: "Glute Bridges", sets: "3", reps: "15" }, ] },
+            hiitCardio: { title: "HIIT Cardio Blast", details: "20 min • 250 kcal • Intermediate", exercises: [{ name: "High Knees", sets: "4", reps: "30s on, 15s off" }, { name: "Burpees", sets: "4", reps: "30s on, 15s off" }, { name: "Mountain Climbers", sets: "4", reps: "30s on, 15s off" }, { name: "Jump Squats", sets: "4", reps: "30s on, 15s off" }, ] }
+        };
+
+        window.showWorkoutDetails = (workoutKey) => {
+            const workout = staticWorkouts[workoutKey];
+            if (!workout) return;
+            document.getElementById('modalTitle').textContent = workout.title;
+            let bodyHtml = `<p class="text-sm text-gray-400 mb-6">${workout.details}</p><div class="space-y-3">`;
+            workout.exercises.forEach(ex => { bodyHtml += `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center"><p class="font-semibold text-white">${ex.name}</p><p class="text-sm text-gray-300">${ex.sets} sets of ${ex.reps}</p></div>`; });
+            bodyHtml += '</div>';
+            document.getElementById('modalBody').innerHTML = bodyHtml;
+            const modal = document.getElementById('workoutModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('#modalContent').classList.remove('scale-95'); }, 10);
+        };
+        window.hideWorkoutDetails = () => {
+            const modal = document.getElementById('workoutModal');
+            modal.classList.add('opacity-0'); modal.querySelector('#modalContent').classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+        
+        // --- Dashboard Insights ---
+        const handleGetInsights = async () => {
+            const insightsResult = document.getElementById('insightsResult');
+            showLoader(insightsResult);
+            const prompt = `As an encouraging AI fitness coach, analyze the following weekly data for a user named Harsh: - Calories Burned: 1,250, - Active Minutes: 150, - Workouts Completed: 4, - Workout Streak: 12 days. Provide a short (2-3 sentences), positive, and motivational summary. Congratulate him on his consistency and suggest one small, actionable tip for the upcoming week based on the data.`;
+            try {
+                const result = await getAIResponse([{role: "user", parts:[{text: prompt}]}], "You are an expert fitness analyst.");
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Could not generate insights.";
+                insightsResult.innerHTML = text.replace(/\n/g, '<br>');
+            } catch (error) { handleApiError(insightsResult, error); }
+        };
+
+        // --- Workout Wizard ---
+        let workoutWizardState = {};
+        const resetWizard = () => {
+            workoutWizardState = {};
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                step.classList.add('opacity-0', 'hidden');
+                if(index === 0) {
+                   step.classList.remove('hidden');
+                   setTimeout(() => step.classList.remove('opacity-0'), 10);
+                }
+            });
+            document.querySelectorAll('.wizard-option').forEach(opt => opt.classList.remove('wizard-option-selected'));
+            document.getElementById('generateWorkoutButton').disabled = true;
+            document.getElementById('generatedWorkoutContainer').innerHTML = '';
+            document.getElementById('workoutWizardContainer').classList.remove('hidden');
+            document.getElementById('generateWorkoutButton').parentElement.classList.remove('hidden');
+            document.getElementById('resetWizardButton').classList.add('hidden');
+        };
+        
+        const handleWizardSelection = (event) => {
+            const target = event.currentTarget;
+            const step = parseInt(target.dataset.step);
+            const value = target.dataset.value;
+            workoutWizardState[`step${step}`] = value;
+            document.querySelectorAll(`.wizard-option[data-step="${step}"]`).forEach(opt => opt.classList.remove('wizard-option-selected'));
+            target.classList.add('wizard-option-selected');
+            const currentStepEl = document.getElementById(`wizard-step-${step}`);
+            const nextStepEl = document.getElementById(`wizard-step-${step + 1}`);
+            setTimeout(() => {
+                if (nextStepEl) {
+                    currentStepEl.classList.add('hidden');
+                    nextStepEl.classList.remove('hidden');
+                    setTimeout(() => nextStepEl.classList.remove('opacity-0'), 10);
+                } else {
+                    document.getElementById('generateWorkoutButton').disabled = false;
+                }
+            }, 300);
+        };
+        
+        const handleGenerateWorkout = async () => {
+            const container = document.getElementById('generatedWorkoutContainer');
+            showLoader(container);
+            document.getElementById('workoutWizardContainer').classList.add('hidden');
+            document.getElementById('generateWorkoutButton').parentElement.classList.add('hidden');
+            const [level, activity, style, day, goal, time, equipment] = Object.values(workoutWizardState);
+            const prompt = `Act as a certified personal trainer. Create a workout plan for a user with the following details: - Fitness Level: ${level}, - Weekly Activity Level: ${activity}, - Preferred Workout Style: ${style}, - Day of the Week: ${day}, - Primary Goal: ${goal}, - Time Available: ${time}, - Equipment: ${equipment}. Generate a suitable title and a list of exercises. For each exercise, provide the name, sets, and reps.`;
+            const schema = { type: "OBJECT", properties: { workoutTitle: { type: "STRING" }, exercises: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, sets: { type: "STRING" }, reps: { type: "STRING" } } } } } };
+            try {
+                const result = await getAIStructuredResponse(prompt, schema);
+                const workoutData = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+                let html = `<h4 class="text-lg font-bold text-white mb-3">${workoutData.workoutTitle}</h4><div class="space-y-3">`;
+                workoutData.exercises.forEach(ex => { html += `<div class="bg-gray-700/50 p-3 rounded-lg flex justify-between items-center"><p class="font-semibold">${ex.name}</p><p class="text-sm text-gray-300">${ex.sets} sets of ${ex.reps}</p></div>`; });
+                html += '</div>';
+                container.innerHTML = html;
+                document.getElementById('resetWizardButton').classList.remove('hidden');
+            } catch (error) { handleApiError(container, error); document.getElementById('resetWizardButton').classList.remove('hidden'); }
+        };
+        
+        // --- Suggestion Chips ---
+        window.useSuggestion = (text) => {
+            document.getElementById('userInput').value = text;
+            handleSendMessage();
+        }
+
+        // --- App Navigation ---
+        window.showView = (viewId, element) => {
+            document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
+            const viewToShow = document.getElementById(viewId);
+            if(viewToShow) viewToShow.classList.remove('hidden');
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-700', 'text-white', 'font-semibold'));
+            if(element) element.classList.add('bg-gray-700', 'text-white', 'font-semibold');
+            if (viewId === 'schedule-view') { renderCalendar(currentYear, currentMonth); } 
+            else if (calendarLogUnsubscribe) { calendarLogUnsubscribe(); calendarLogUnsubscribe = null; }
+            if (viewId === 'dashboard-view') { generateWeeklyReport(); }
+        };
+        
+        // Full Event Listener Setup
+        function attachInitialEventListeners() {
+            document.getElementById('sendButton').addEventListener('click', handleSendMessage);
+            document.getElementById('getInsightsButton').addEventListener('click', handleGetInsights);
+            document.getElementById('generateWorkoutButton').addEventListener('click', handleGenerateWorkout);
+            document.getElementById('resetWizardButton').addEventListener('click', resetWizard);
+            document.querySelectorAll('.wizard-option').forEach(btn => btn.addEventListener('click', handleWizardSelection));
+            document.getElementById('generateMealPlanButton').addEventListener('click', handleGenerateMealPlan);
+            document.getElementById('logMealButton').addEventListener('click', handleLogMeal);
+            document.getElementById('prevMonthBtn').addEventListener('click', () => { currentMonth--; if(currentMonth < 0){ currentMonth = 11; currentYear--; } renderCalendar(currentYear, currentMonth); });
+            document.getElementById('nextMonthBtn').addEventListener('click', () => { currentMonth++; if(currentMonth > 11){ currentMonth = 0; currentYear++; } renderCalendar(currentYear, currentMonth); });
+            document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(); } });
+        }
+
+        // --- Start the App ---
+        document.addEventListener('DOMContentLoaded', initialize);
+
+    </script>
 </body>
 </html>
+
